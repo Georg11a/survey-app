@@ -255,12 +255,19 @@ export default function SurveyApp() {
   const allRoundData = useMemo(() => {
     const rounds = [...baseRoundData];
     const repeated = baseRoundData[repeatIdx];
-    rounds.push({
+    const repeatRound = {
       id: UNIQUE_ROUNDS + 1,
-      label: repeated.label + " (repeat)",
+      label: repeated.label,
       repeatsRound: repeatIdx + 1,
       charts: repeated.charts.map((c) => ({ ...c, id: `rep_${c.id}` })),
-    });
+    };
+    // Maximize distance: if original is in the second half (index 2 or 3),
+    // put repeat at the beginning; otherwise keep at the end.
+    if (repeatIdx >= UNIQUE_ROUNDS / 2) {
+      rounds.unshift(repeatRound);
+    } else {
+      rounds.push(repeatRound);
+    }
     return rounds;
   }, [repeatIdx]);
 
@@ -281,7 +288,7 @@ export default function SurveyApp() {
   const [submitError, setSubmitError] = useState(null);
 
   // Google Apps Script Web App URL — replace after deploying
-  const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzEHx7nKg-9aVPIIdLYE1zKACiPBjLCO6zzMEJ45AS2kYdxZFHTj71_KVxIcdtUElE/exec";
+  const GOOGLE_SCRIPT_URL = "PASTE_YOUR_GOOGLE_APPS_SCRIPT_URL_HERE";
 
   const collectData = useCallback(() => ({
     prolificId, age, gender, education, designExp, colorVision,
