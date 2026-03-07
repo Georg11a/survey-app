@@ -20,7 +20,7 @@ const baseRoundData = [
     charts: Array.from({ length: 7 }, (_, j) => ({
       id: `bar_${j + 1}`,
       label: `Chart ${String.fromCharCode(65 + j)}`,
-      image: `/images/honest-bar-${j + 1}.png`,
+      image: `${import.meta.env.BASE_URL}images/honest-bar-${j + 1}.png`,
     })),
   },
   {
@@ -29,7 +29,7 @@ const baseRoundData = [
     charts: Array.from({ length: 7 }, (_, j) => ({
       id: `line_${j + 1}`,
       label: `Chart ${String.fromCharCode(65 + j)}`,
-      image: `/images/honest-line-${j + 1}.png`,
+      image: `${import.meta.env.BASE_URL}images/honest-line-${j + 1}.png`,
     })),
   },
   {
@@ -38,7 +38,7 @@ const baseRoundData = [
     charts: Array.from({ length: 7 }, (_, j) => ({
       id: `pie_${j + 1}`,
       label: `Chart ${String.fromCharCode(65 + j)}`,
-      image: `/images/honest-pie-${j + 1}.png`,
+      image: `${import.meta.env.BASE_URL}images/honest-pie-${j + 1}.png`,
     })),
   },
   {
@@ -47,7 +47,7 @@ const baseRoundData = [
     charts: Array.from({ length: 7 }, (_, j) => ({
       id: `bubble_${j + 1}`,
       label: `Chart ${String.fromCharCode(65 + j)}`,
-      image: `/images/honest-bubble-${j + 1}.png`,
+      image: `${import.meta.env.BASE_URL}images/honest-bubble-${j + 1}.png`,
     })),
   },
 ];
