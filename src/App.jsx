@@ -305,7 +305,7 @@ export default function SurveyApp() {
   const [submitError, setSubmitError] = useState(null);
 
   // Google Apps Script Web App URL — replace after deploying
-  const GOOGLE_SCRIPT_URL = "PASTE_YOUR_GOOGLE_APPS_SCRIPT_URL_HERE";
+  const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwJhUoB4WuMx7UUkpK09iNWMQRlo82-UXdaCbeZx-s1Lua-aM3uAxGG0zRtHHHe44A/exec";
 
   const collectData = useCallback(() => ({
     prolificId, age, gender, education, designExp, colorVision,
