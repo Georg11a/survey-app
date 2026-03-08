@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useMemo } from "react";
+import { useState, useRef, useCallback, useMemo, useEffect } from "react";
 
 const CHARTS_PER_ROUND = 7;
 const UNIQUE_ROUNDS = 4;
@@ -81,86 +81,316 @@ function ImageModal({ src, label, onClose }) {
   );
 }
 
-/* ─── Drag-and-drop chart row with real images ─── */
-function DragChartRow({ items, setItems, accentColor = "#2a8fc1" }) {
-  const dragItem = useRef(null);
-  const dragOver = useRef(null);
-  const [draggingIdx, setDraggingIdx] = useState(null);
+/* ─── Split Layout: Thumbnails + Compare (left) | Ranking slots (right) ─── */
+function SplitRankingPanel({ charts, rankedItems, setRankedItems, accentColor = "#2a8fc1" }) {
   const [modalImg, setModalImg] = useState(null);
+  const [compareCharts, setCompareCharts] = useState([]);
+  const [dragSource, setDragSource] = useState(null); // { from: 'thumbnail'|'slot', index, chart }
 
-  const onDragStart = (e, idx) => { dragItem.current = idx; setDraggingIdx(idx); e.dataTransfer.effectAllowed = "move"; };
-  const onDragEnter = (idx) => { dragOver.current = idx; };
-  const onDragEnd = () => {
-    if (dragItem.current !== null && dragOver.current !== null && dragItem.current !== dragOver.current) {
-      const copy = [...items];
-      const dragged = copy.splice(dragItem.current, 1)[0];
-      copy.splice(dragOver.current, 0, dragged);
-      setItems(copy);
-    }
-    dragItem.current = null; dragOver.current = null; setDraggingIdx(null);
+  // Charts not yet placed in ranking
+  const unrankedCharts = charts.filter(
+    (c) => !rankedItems.some((r) => r && r.id === c.id)
+  );
+
+  // Toggle a chart in compare panel
+  const toggleCompare = (chart) => {
+    setCompareCharts((prev) => {
+      const exists = prev.find((c) => c.id === chart.id);
+      if (exists) return prev.filter((c) => c.id !== chart.id);
+      if (prev.length >= 3) return prev; // max 3
+      return [...prev, chart];
+    });
   };
+
+  const removeCompare = (chartId) => {
+    setCompareCharts((prev) => prev.filter((c) => c.id !== chartId));
+  };
+
+  // Drag from thumbnail area
+  const onThumbDragStart = (e, chart) => {
+    setDragSource({ from: "thumbnail", chart });
+    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData("text/plain", chart.id);
+  };
+
+  // Drag from a ranking slot
+  const onSlotDragStart = (e, idx) => {
+    if (!rankedItems[idx]) return;
+    setDragSource({ from: "slot", index: idx, chart: rankedItems[idx] });
+    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData("text/plain", rankedItems[idx].id);
+  };
+
+  // Drop onto a ranking slot
+  const onSlotDrop = (e, targetIdx) => {
+    e.preventDefault();
+    if (!dragSource) return;
+
+    const newRanked = [...rankedItems];
+
+    if (dragSource.from === "thumbnail") {
+      // If slot is occupied, swap back to unranked
+      if (newRanked[targetIdx]) {
+        // slot already has a chart — swap it out
+      }
+      newRanked[targetIdx] = dragSource.chart;
+    } else if (dragSource.from === "slot") {
+      // Reorder within slots
+      const srcIdx = dragSource.index;
+      const temp = newRanked[targetIdx];
+      newRanked[targetIdx] = newRanked[srcIdx];
+      newRanked[srcIdx] = temp;
+    }
+
+    setRankedItems(newRanked);
+    setDragSource(null);
+  };
+
+  // Drop back to thumbnail area (unrank)
+  const onThumbAreaDrop = (e) => {
+    e.preventDefault();
+    if (!dragSource || dragSource.from !== "slot") return;
+    const newRanked = [...rankedItems];
+    newRanked[dragSource.index] = null;
+    setRankedItems(newRanked);
+    setDragSource(null);
+  };
+
+  const onDragOver = (e) => e.preventDefault();
+  const onDragEnd = () => setDragSource(null);
+
+  // Remove from ranking slot (click X)
+  const removeFromSlot = (idx) => {
+    const newRanked = [...rankedItems];
+    newRanked[idx] = null;
+    setRankedItems(newRanked);
+  };
+
+  const rankedCount = rankedItems.filter(Boolean).length;
 
   return (
     <div>
       <ImageModal src={modalImg?.image} label={modalImg?.label} onClose={() => setModalImg(null)} />
-      {/* Fixed rank numbers */}
-      <div style={{ display: "flex", gap: 10, padding: "0 2px", marginBottom: 6 }}>
-        {items.map((_, idx) => (
-          <div key={idx} style={{ flex: "1 1 0", minWidth: 0, textAlign: "center" }}>
-            <span style={{
-              display: "inline-flex", alignItems: "center", justifyContent: "center",
-              width: 26, height: 26, borderRadius: 6, background: accentColor, color: "#fff",
-              fontWeight: 700, fontSize: 13,
-            }}>{idx + 1}</span>
-          </div>
-        ))}
-      </div>
-      {/* Draggable cards */}
-      <div style={{ display: "flex", gap: 10, padding: "4px 2px 8px" }}>
-        {items.map((item, idx) => {
-          const isDragging = draggingIdx === idx;
-          return (
-            <div key={item.id} draggable
-              onDragStart={(e) => onDragStart(e, idx)}
-              onDragEnter={() => onDragEnter(idx)}
-              onDragEnd={onDragEnd}
-              onDragOver={(e) => e.preventDefault()}
-              style={{
-                flex: "1 1 0", minWidth: 0, background: "#fff",
-                border: "1.5px solid #e2e8f0", borderRadius: 8,
-                padding: "8px 6px 6px", cursor: "grab",
-                transition: "box-shadow .15s, transform .15s",
-                position: "relative", userSelect: "none",
-                opacity: isDragging ? 0.5 : 1,
-              }}
-              onMouseOver={(e) => { if (!isDragging) { e.currentTarget.style.boxShadow = "0 4px 16px rgba(0,0,0,.1)"; e.currentTarget.style.transform = "translateY(-2px)"; }}}
-              onMouseOut={(e) => { e.currentTarget.style.boxShadow = "none"; e.currentTarget.style.transform = "none"; }}
-            >
-              {/* Enlarge button */}
-              <button onClick={(e) => { e.stopPropagation(); setModalImg(item); }}
-                onMouseDown={(e) => e.stopPropagation()} draggable={false}
-                style={{
-                  position: "absolute", top: 4, right: 4, width: 22, height: 22, borderRadius: 5,
-                  border: "none", background: "rgba(255,255,255,.9)", cursor: "pointer",
-                  fontSize: 12, display: "flex", alignItems: "center", justifyContent: "center",
-                  color: "#4a5568", boxShadow: "0 1px 3px rgba(0,0,0,.12)", zIndex: 2,
-                }} title="Click to enlarge">⤢</button>
-              {/* Chart image */}
-              <img src={item.image} alt={item.label} draggable={false}
-                style={{ width: "100%", borderRadius: 4, display: "block" }} />
-              <div style={{ textAlign: "center", marginTop: 4 }}>
-                <div style={{ fontWeight: 600, fontSize: 11, color: "#2d3748" }}>{item.label}</div>
-              </div>
+
+      <div style={{ display: "flex", gap: 20, alignItems: "flex-start" }}>
+        {/* ═══ LEFT SIDE: Thumbnails + Compare ═══ */}
+        <div style={{ flex: "1 1 0", minWidth: 0 }}>
+          {/* Thumbnail grid */}
+          <div
+            onDrop={onThumbAreaDrop}
+            onDragOver={onDragOver}
+            style={{
+              background: "#f8f9fb", borderRadius: 10, padding: 14,
+              border: "1.5px dashed #d1d8e0", marginBottom: 14,
+              minHeight: 80,
+            }}
+          >
+            <div style={{
+              display: "flex", flexWrap: "wrap", gap: 8,
+              justifyContent: "flex-start",
+            }}>
+              {charts.map((chart) => {
+                const isRanked = rankedItems.some((r) => r && r.id === chart.id);
+                const isComparing = compareCharts.some((c) => c.id === chart.id);
+                return (
+                  <div
+                    key={chart.id}
+                    draggable={!isRanked}
+                    onDragStart={(e) => !isRanked && onThumbDragStart(e, chart)}
+                    onDragEnd={onDragEnd}
+                    onClick={() => !isRanked && toggleCompare(chart)}
+                    style={{
+                      width: 90, background: "#fff",
+                      border: isComparing ? `2px solid ${accentColor}` : "1.5px solid #e2e8f0",
+                      borderRadius: 8, padding: 5,
+                      opacity: isRanked ? 0.3 : 1,
+                      cursor: isRanked ? "default" : "grab",
+                      position: "relative", userSelect: "none",
+                      transition: "all .15s",
+                      pointerEvents: isRanked ? "none" : "auto",
+                    }}
+                  >
+                    {/* Enlarge button */}
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setModalImg(chart); }}
+                      onMouseDown={(e) => e.stopPropagation()}
+                      draggable={false}
+                      style={{
+                        position: "absolute", top: 2, right: 2, width: 18, height: 18,
+                        borderRadius: 4, border: "none",
+                        background: "rgba(255,255,255,.9)", cursor: "pointer",
+                        fontSize: 10, display: "flex", alignItems: "center", justifyContent: "center",
+                        color: "#4a5568", boxShadow: "0 1px 3px rgba(0,0,0,.12)", zIndex: 2,
+                        pointerEvents: "auto",
+                      }}
+                      title="Click to enlarge"
+                    >⤢</button>
+                    <img src={chart.image} alt={chart.label} draggable={false}
+                      style={{ width: "100%", borderRadius: 4, display: "block" }} />
+                    <div style={{ textAlign: "center", marginTop: 3 }}>
+                      <span style={{ fontWeight: 700, fontSize: 10, color: "#2d3748" }}>{chart.label}</span>
+                    </div>
+                    {isRanked && (
+                      <div style={{
+                        position: "absolute", top: 0, left: 0, right: 0, bottom: 0,
+                        background: "rgba(255,255,255,.5)", borderRadius: 7,
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                      }}>
+                        <span style={{ fontSize: 11, color: "#38a169", fontWeight: 700, background: "#fff", padding: "2px 8px", borderRadius: 4 }}>Ranked</span>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
-          );
-        })}
+            <p style={{ fontSize: 10, color: "#a0aec0", margin: "8px 0 0", fontStyle: "italic" }}>
+              Drag charts to the ranking slots on the right. Click a chart to compare below. Click ⤢ to enlarge.
+            </p>
+          </div>
+
+          {/* Compare panel */}
+          <div style={{
+            background: "#fff", borderRadius: 10, padding: 14,
+            border: "1px solid #e2e8f0", minHeight: 100,
+          }}>
+            <div style={{
+              fontSize: 12, fontWeight: 700, color: "#4a5568",
+              marginBottom: 10, textTransform: "uppercase", letterSpacing: 0.5,
+            }}>
+              Compare Panel {compareCharts.length > 0 && `(${compareCharts.length}/3)`}
+            </div>
+            {compareCharts.length === 0 ? (
+              <div style={{
+                color: "#a0aec0", fontSize: 13, textAlign: "center",
+                padding: "24px 0", fontStyle: "italic",
+              }}>
+                Click on charts above to compare them side by side
+              </div>
+            ) : (
+              <div style={{ display: "flex", gap: 10 }}>
+                {compareCharts.map((chart) => (
+                  <div key={chart.id} style={{
+                    flex: "1 1 0", minWidth: 0, position: "relative",
+                    background: "#f8f9fb", borderRadius: 8, padding: 8,
+                    border: "1px solid #e2e8f0",
+                  }}>
+                    <button
+                      onClick={() => removeCompare(chart.id)}
+                      style={{
+                        position: "absolute", top: 4, right: 4, width: 20, height: 20,
+                        borderRadius: 4, border: "none", background: "#fff",
+                        cursor: "pointer", fontSize: 12, color: "#a0aec0",
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        boxShadow: "0 1px 2px rgba(0,0,0,.1)",
+                      }}
+                    >✕</button>
+                    <img src={chart.image} alt={chart.label} style={{
+                      width: "100%", borderRadius: 4, display: "block",
+                    }} />
+                    <div style={{ textAlign: "center", marginTop: 4 }}>
+                      <span style={{ fontWeight: 700, fontSize: 11, color: "#2d3748" }}>{chart.label}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* ═══ RIGHT SIDE: Ranking slots ═══ */}
+        <div style={{ width: 220, flexShrink: 0 }}>
+          <div style={{
+            display: "flex", justifyContent: "space-between",
+            marginBottom: 8, padding: "0 4px",
+          }}>
+            <span style={{ fontSize: 11, fontWeight: 700, color: accentColor, textTransform: "uppercase" }}>Most</span>
+            <span style={{ fontSize: 10, color: "#a0aec0" }}>{rankedCount}/{CHARTS_PER_ROUND}</span>
+          </div>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            {rankedItems.map((item, idx) => (
+              <div
+                key={idx}
+                onDrop={(e) => onSlotDrop(e, idx)}
+                onDragOver={onDragOver}
+                draggable={!!item}
+                onDragStart={(e) => item && onSlotDragStart(e, idx)}
+                onDragEnd={onDragEnd}
+                style={{
+                  display: "flex", alignItems: "center", gap: 8,
+                  padding: item ? "4px 6px" : "8px 6px",
+                  borderRadius: 8,
+                  border: item ? `1.5px solid ${accentColor}33` : "1.5px dashed #cbd5e0",
+                  background: item ? "#fff" : "#fafbfc",
+                  minHeight: 48,
+                  cursor: item ? "grab" : "default",
+                  transition: "all .15s",
+                }}
+              >
+                {/* Rank number */}
+                <div style={{
+                  width: 24, height: 24, borderRadius: 6,
+                  background: item ? accentColor : "#e2e8f0",
+                  color: item ? "#fff" : "#a0aec0",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  fontWeight: 700, fontSize: 12, flexShrink: 0,
+                }}>
+                  {idx + 1}
+                </div>
+
+                {item ? (
+                  <>
+                    <img src={item.image} alt={item.label} draggable={false}
+                      style={{ width: 48, height: 32, objectFit: "cover", borderRadius: 4, flexShrink: 0 }} />
+                    <span style={{ fontSize: 12, fontWeight: 600, color: "#2d3748", flex: 1, minWidth: 0 }}>
+                      {item.label}
+                    </span>
+                    <button
+                      onClick={() => removeFromSlot(idx)}
+                      style={{
+                        width: 20, height: 20, borderRadius: 4, border: "none",
+                        background: "#f7f8fa", cursor: "pointer", fontSize: 11,
+                        color: "#a0aec0", display: "flex", alignItems: "center",
+                        justifyContent: "center", flexShrink: 0,
+                      }}
+                    >✕</button>
+                  </>
+                ) : (
+                  <span style={{ fontSize: 12, color: "#cbd5e0", fontStyle: "italic" }}>
+                    Drop chart here
+                  </span>
+                )}
+              </div>
+            ))}
+          </div>
+
+          <div style={{
+            display: "flex", justifyContent: "space-between",
+            marginTop: 8, padding: "0 4px",
+          }}>
+            <span style={{ fontSize: 11, fontWeight: 700, color: "#e53e3e", textTransform: "uppercase" }}>Least</span>
+          </div>
+
+          {/* Quick clear */}
+          {rankedCount > 0 && (
+            <button
+              onClick={() => setRankedItems(Array(CHARTS_PER_ROUND).fill(null))}
+              style={{
+                marginTop: 10, width: "100%", padding: "6px 0",
+                borderRadius: 6, border: "1px solid #e2e8f0",
+                background: "#fff", color: "#a0aec0", fontSize: 11,
+                cursor: "pointer",
+              }}
+            >
+              Clear all rankings
+            </button>
+          )}
+        </div>
       </div>
-      <p style={{ fontSize: 11, color: "#a0aec0", margin: "4px 0 0 2px", fontStyle: "italic" }}>
-        Drag and rank the visualizations from 1 to {items.length}, where 1 (left) = most and {items.length} (right) = least. Click ⤢ to enlarge.
-      </p>
     </div>
   );
 }
+
 
 /* ─── Instruction block ─── */
 function TaskInstructions({ keyword, color }) {
@@ -171,8 +401,8 @@ function TaskInstructions({ keyword, color }) {
     }}>
       <p style={{ color: "#4a5568", fontSize: 14, lineHeight: 1.7, margin: 0 }}>
         Rank the charts below from most {keyword} to least {keyword} based on how "{keyword}" their visual style looks.
-        Drag the chart that looks <span style={{ fontWeight: 800, color: "#2d3748", textDecoration: "underline" }}>
-        most {keyword} to the left, and the chart that looks least {keyword} to the right</span>.
+        Drag charts from the left panel into the <span style={{ fontWeight: 800, color: "#2d3748", textDecoration: "underline" }}>
+        ranking slots on the right</span>, with the most {keyword} at the top (rank 1) and the least {keyword} at the bottom (rank 7).
       </p>
       <p style={{ color: "#718096", fontSize: 13, lineHeight: 1.6, margin: "10px 0 0" }}>
         Important: Compare each visualization carefully, and focus only on the design style (layout, typography, color, spacing, alignment, clarity, etc.). Do not consider the data content or whether you agree with anything shown in the chart.
@@ -288,13 +518,14 @@ export default function SurveyApp() {
     return shuffled;
   }, [repeatIdx]);
 
+  // Rankings now use null-filled arrays (slot-based)
   const [profRankings, setProfRankings] = useState(() =>
-    allRoundData.map((r) => shuffle([...r.charts]))
+    allRoundData.map(() => Array(CHARTS_PER_ROUND).fill(null))
   );
   const [profExplanations, setProfExplanations] = useState(Array(TOTAL_ROUNDS).fill(""));
 
   const [trustRankings, setTrustRankings] = useState(() =>
-    allRoundData.map((r) => shuffle([...r.charts]))
+    allRoundData.map(() => Array(CHARTS_PER_ROUND).fill(null))
   );
   const [trustExplanations, setTrustExplanations] = useState(Array(TOTAL_ROUNDS).fill(""));
 
@@ -312,13 +543,19 @@ export default function SurveyApp() {
     nativeLang: nativeLang === "Other" ? otherLang : nativeLang,
     repeatRound: roundTypeMap[repeatIdx],
     roundOrder: allRoundData.map((r) => r.roundType),
-    roundTimings: roundTimings.map((t) => Math.round(t / 1000)), // seconds
+    roundTimings: roundTimings.map((t) => Math.round(t / 1000)),
     rounds: allRoundData.map((r, i) => ({
       round: i + 1,
       roundType: r.roundType,
       repeatsRound: r.repeatsRound || null,
-      professional: { order: profRankings[i].map((c) => c.id), explanation: profExplanations[i] },
-      trust: { order: trustRankings[i].map((c) => c.id), explanation: trustExplanations[i] },
+      professional: {
+        order: profRankings[i].map((c) => c ? c.id : "empty"),
+        explanation: profExplanations[i],
+      },
+      trust: {
+        order: trustRankings[i].map((c) => c ? c.id : "empty"),
+        explanation: trustExplanations[i],
+      },
     })),
     comments,
     submittedAt: new Date().toISOString(),
@@ -330,11 +567,9 @@ export default function SurveyApp() {
   const next = () => {
     setStep((s) => {
       const nextStep = s + 1;
-      // Start timer when entering a ranking round
       if (nextStep >= rankingStart && nextStep <= rankingEnd) {
         setRoundStartTime(Date.now());
       }
-      // Record time when leaving a ranking round
       if (s >= rankingStart && s <= rankingEnd && roundStartTime) {
         const ri = s - rankingStart;
         setRoundTimings((prev) => {
@@ -351,7 +586,6 @@ export default function SurveyApp() {
   const back = () => {
     setStep((s) => {
       const prevStep = s - 1;
-      // Restart timer if going back to a ranking round
       if (prevStep >= rankingStart && prevStep <= rankingEnd) {
         setRoundStartTime(Date.now());
       }
@@ -451,7 +685,7 @@ export default function SurveyApp() {
           </div>
           <div style={{ borderTop: "1px solid #e2e8f0", paddingTop: 24 }}>
             <p style={{ color: "#6b7a8d", fontSize: 16, lineHeight: 1.75 }}>
-              In each round you will rank the same set of charts twice — once for <strong>professionalism</strong> and once for <strong>trust</strong>. Drag charts to reorder them. Click the ⤢ icon on any chart to see it enlarged.
+              In each round you will rank the same set of charts twice — once for <strong>professionalism</strong> and once for <strong>trust</strong>. Drag charts from the thumbnail panel into the ranking slots. Click on charts to compare them side by side. Click the ⤢ icon to see any chart enlarged.
             </p>
           </div>
           <Nav showBack={false} onNext={next} nextLabel="Begin →" />
@@ -463,7 +697,11 @@ export default function SurveyApp() {
   /* ─── STEPS 2+: Ranking rounds ─── */
   if (step >= rankingStart && step <= rankingEnd) {
     const ri = step - rankingStart;
-    const canProceed = profExplanations[ri].trim().length > 0 && trustExplanations[ri].trim().length > 0;
+    const profAllFilled = profRankings[ri].every(Boolean);
+    const trustAllFilled = trustRankings[ri].every(Boolean);
+    const canProceed = profAllFilled && trustAllFilled
+      && profExplanations[ri].trim().length > 0
+      && trustExplanations[ri].trim().length > 0;
 
     return (
       <Page>
@@ -489,11 +727,19 @@ export default function SurveyApp() {
             Task A: Rank by Professionalism
           </h2>
           <TaskInstructions keyword="professional" color="#2a8fc1" />
-          <DragChartRow
-            items={profRankings[ri]}
-            setItems={(o) => { const c = [...profRankings]; c[ri] = o; setProfRankings(c); }}
+          <SplitRankingPanel
+            charts={allRoundData[ri].charts}
+            rankedItems={profRankings[ri]}
+            setRankedItems={(items) => {
+              const c = [...profRankings]; c[ri] = items; setProfRankings(c);
+            }}
             accentColor="#2a8fc1"
           />
+          {!profAllFilled && (
+            <p style={{ fontSize: 12, color: "#e53e3e", margin: "8px 0 0" }}>
+              Please rank all {CHARTS_PER_ROUND} charts before proceeding.
+            </p>
+          )}
           <div style={{ marginTop: 20 }}>
             <label style={{ fontWeight: 600, color: "#4a5568", fontSize: 14 }}>
               Please briefly explain why you made this ranking decision. What specific visual features influenced your decision? <span style={{ color: "#e53e3e" }}>*</span>
@@ -518,11 +764,19 @@ export default function SurveyApp() {
             Task B: Rank by Trust
           </h2>
           <TaskInstructions keyword="trustworthy" color="#38a169" />
-          <DragChartRow
-            items={trustRankings[ri]}
-            setItems={(o) => { const c = [...trustRankings]; c[ri] = o; setTrustRankings(c); }}
+          <SplitRankingPanel
+            charts={allRoundData[ri].charts}
+            rankedItems={trustRankings[ri]}
+            setRankedItems={(items) => {
+              const c = [...trustRankings]; c[ri] = items; setTrustRankings(c);
+            }}
             accentColor="#38a169"
           />
+          {!trustAllFilled && (
+            <p style={{ fontSize: 12, color: "#e53e3e", margin: "8px 0 0" }}>
+              Please rank all {CHARTS_PER_ROUND} charts before proceeding.
+            </p>
+          )}
           <div style={{ marginTop: 20 }}>
             <label style={{ fontWeight: 600, color: "#4a5568", fontSize: 14 }}>
               Please briefly explain why you made this ranking decision. What specific visual features influenced your decision? <span style={{ color: "#e53e3e" }}>*</span>
