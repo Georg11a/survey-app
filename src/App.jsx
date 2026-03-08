@@ -156,7 +156,7 @@ function DragChartRow({ items, setItems, accentColor = "#2a8fc1" }) {
         })}
       </div>
       <p style={{ fontSize: 11, color: "#a0aec0", margin: "4px 0 0 2px", fontStyle: "italic" }}>
-        Drag charts to reorder. Click ⤢ to enlarge. Position 1 (left) = most, position {items.length} (right) = least.
+        Drag and rank the visualizations from 1 to {items.length}, where 1 (left) = most and {items.length} (right) = least. Click ⤢ to enlarge.
       </p>
     </div>
   );
@@ -252,6 +252,9 @@ export default function SurveyApp() {
   const repeatIdx = useMemo(() => Math.floor(Math.random() * UNIQUE_ROUNDS), []);
   const TOTAL_ROUNDS = UNIQUE_ROUNDS + 1;
 
+  // Map: 1=bar, 2=line, 3=pie, 4=bubble
+  const roundTypeMap = { 0: 1, 1: 2, 2: 3, 3: 4 };
+
   const allRoundData = useMemo(() => {
     const rounds = [...baseRoundData];
     const repeated = baseRoundData[repeatIdx];
@@ -259,16 +262,30 @@ export default function SurveyApp() {
       id: UNIQUE_ROUNDS + 1,
       label: repeated.label,
       repeatsRound: repeatIdx + 1,
+      roundType: roundTypeMap[repeatIdx],
       charts: repeated.charts.map((c) => ({ ...c, id: `rep_${c.id}` })),
     };
-    // Maximize distance: if original is in the second half (index 2 or 3),
-    // put repeat at the beginning; otherwise keep at the end.
-    if (repeatIdx >= UNIQUE_ROUNDS / 2) {
-      rounds.unshift(repeatRound);
-    } else {
-      rounds.push(repeatRound);
+
+    // Add roundType to base rounds
+    const allWithType = rounds.map((r, i) => ({ ...r, roundType: roundTypeMap[i] }));
+    allWithType.push(repeatRound);
+
+    // Shuffle until no adjacent rounds have the same roundType
+    const hasAdjacentDupe = (arr) => {
+      for (let i = 0; i < arr.length - 1; i++) {
+        if (arr[i].roundType === arr[i + 1].roundType) return true;
+      }
+      return false;
+    };
+
+    let attempts = 0;
+    let shuffled = shuffle(allWithType);
+    while (hasAdjacentDupe(shuffled) && attempts < 100) {
+      shuffled = shuffle(allWithType);
+      attempts++;
     }
-    return rounds;
+
+    return shuffled;
   }, [repeatIdx]);
 
   const [profRankings, setProfRankings] = useState(() =>
@@ -293,10 +310,12 @@ export default function SurveyApp() {
   const collectData = useCallback(() => ({
     prolificId, age, gender, education, designExp, colorVision,
     nativeLang: nativeLang === "Other" ? otherLang : nativeLang,
-    repeatRound: repeatIdx + 1,
+    repeatRound: roundTypeMap[repeatIdx],
+    roundOrder: allRoundData.map((r) => r.roundType),
     roundTimings: roundTimings.map((t) => Math.round(t / 1000)), // seconds
     rounds: allRoundData.map((r, i) => ({
       round: i + 1,
+      roundType: r.roundType,
       repeatsRound: r.repeatsRound || null,
       professional: { order: profRankings[i].map((c) => c.id), explanation: profExplanations[i] },
       trust: { order: trustRankings[i].map((c) => c.id), explanation: trustExplanations[i] },
@@ -531,7 +550,7 @@ export default function SurveyApp() {
   /* ─── About You ─── */
   const aboutStep = rankingEnd + 1;
   if (step === aboutStep) {
-    const canProceed = age && gender && education && designExp && colorVision;
+    const canProceed = age && gender && education && designExp && colorVision && nativeLang && (nativeLang !== "Other" || otherLang.trim());
     return (
       <Page>
         <div style={{ maxWidth: 700, margin: "0 auto" }}>
@@ -598,7 +617,7 @@ export default function SurveyApp() {
           </div>
 
           <div style={{ marginBottom: 28 }}>
-            <label style={{ fontWeight: 600, color: "#2d3748", fontSize: 15 }}>What is your native language?</label>
+            <label style={{ fontWeight: 600, color: "#2d3748", fontSize: 15 }}>What is your native language? <span style={{ color: "#e53e3e" }}>*</span></label>
             <select value={nativeLang} onChange={(e) => setNativeLang(e.target.value)} style={{ ...inputStyle, background: "#fff" }}>
               <option value="">Select...</option>
               <option value="English">English</option>
