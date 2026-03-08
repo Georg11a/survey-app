@@ -244,7 +244,7 @@ function SplitRankingPanel({ charts, rankedItems, setRankedItems, accentColor = 
               })}
             </div>
             <p style={{ fontSize: 10, color: "#a0aec0", margin: "8px 0 0", fontStyle: "italic" }}>
-              Drag charts to the ranking slots on the right. Click a chart to compare below. Click ⤢ to enlarge.
+              Drag and rank the visualizations from 1 to 7, where 1 (top) = most and 7 (bottom) = least. Click a chart to compare below. Click ⤢ to enlarge.
             </p>
           </div>
 
@@ -400,9 +400,9 @@ function TaskInstructions({ keyword, color }) {
       marginBottom: 16, borderLeft: `4px solid ${color}`,
     }}>
       <p style={{ color: "#4a5568", fontSize: 14, lineHeight: 1.7, margin: 0 }}>
-        Rank the charts below from most {keyword} to least {keyword} based on how "{keyword}" their visual style looks.
-        Drag charts from the left panel into the <span style={{ fontWeight: 800, color: "#2d3748", textDecoration: "underline" }}>
-        ranking slots on the right</span>, with the most {keyword} at the top (rank 1) and the least {keyword} at the bottom (rank 7).
+        Drag and rank the visualizations from 1 to 7, where <span style={{ fontWeight: 800, color: "#2d3748", textDecoration: "underline" }}>
+        1 (top) = most {keyword}</span> and <span style={{ fontWeight: 800, color: "#2d3748", textDecoration: "underline" }}>
+        7 (bottom) = least {keyword}</span>. Drag charts from the left panel into the ranking slots on the right. Click ⤢ to enlarge.
       </p>
       <p style={{ color: "#718096", fontSize: 13, lineHeight: 1.6, margin: "10px 0 0" }}>
         Important: Compare each visualization carefully, and focus only on the design style (layout, typography, color, spacing, alignment, clarity, etc.). Do not consider the data content or whether you agree with anything shown in the chart.
