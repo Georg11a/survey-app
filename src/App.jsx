@@ -400,6 +400,10 @@ function TaskInstructions({ keyword, color }) {
       marginBottom: 16, borderLeft: `4px solid ${color}`,
     }}>
       <p style={{ color: "#4a5568", fontSize: 14, lineHeight: 1.7, margin: 0 }}>
+        Rank the charts based on how <span style={{
+          fontWeight: 800, color: "#fff", background: color,
+          padding: "2px 8px", borderRadius: 4, fontSize: 14,
+        }}>"{keyword}"</span> their visual style looks.
         Drag and rank the visualizations from 1 to 7, where <span style={{ fontWeight: 800, color: "#2d3748", textDecoration: "underline" }}>
         1 (top) = most {keyword}</span> and <span style={{ fontWeight: 800, color: "#2d3748", textDecoration: "underline" }}>
         7 (bottom) = least {keyword}</span>. Drag charts from the left panel into the ranking slots on the right. Click ⤢ to enlarge.
