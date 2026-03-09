@@ -653,7 +653,7 @@ export default function SurveyApp() {
           </div>
           <div style={{ marginBottom: 24 }}>
             <label style={{ fontWeight: 600, color: "#2d3748", fontSize: 14 }}>
-              Prolific ID <span style={{ color: "#e53e3e" }}>*</span>
+              Prolific ID
             </label>
             <input type="text" placeholder="e.g. 5f3c2a1b..." value={prolificId}
               onChange={(e) => setProlificId(e.target.value)} style={inputStyle}
@@ -703,9 +703,7 @@ export default function SurveyApp() {
     const ri = step - rankingStart;
     const profAllFilled = profRankings[ri].every(Boolean);
     const trustAllFilled = trustRankings[ri].every(Boolean);
-    const canProceed = profAllFilled && trustAllFilled
-      && profExplanations[ri].trim().length > 0
-      && trustExplanations[ri].trim().length > 0;
+    const canProceed = profAllFilled && trustAllFilled;
 
     return (
       <Page>
@@ -746,7 +744,7 @@ export default function SurveyApp() {
           )}
           <div style={{ marginTop: 20 }}>
             <label style={{ fontWeight: 600, color: "#4a5568", fontSize: 14 }}>
-              Please briefly explain why you made this ranking decision. What specific visual features influenced your decision? <span style={{ color: "#e53e3e" }}>*</span>
+              Please briefly explain why you made this ranking decision. What specific visual features influenced your decision?
             </label>
             <textarea value={profExplanations[ri]}
               onChange={(e) => { const c = [...profExplanations]; c[ri] = e.target.value; setProfExplanations(c); }}
@@ -754,9 +752,6 @@ export default function SurveyApp() {
               style={{ ...inputStyle, marginTop: 8, resize: "vertical", fontFamily: "inherit" }}
               onFocus={(e) => e.target.style.borderColor = "#2a8fc1"}
               onBlur={(e) => e.target.style.borderColor = "#cbd5e0"} />
-            {!profExplanations[ri].trim() && (
-              <p style={{ fontSize: 12, color: "#e53e3e", margin: "4px 0 0" }}>This field is required.</p>
-            )}
           </div>
         </div>
 
@@ -783,7 +778,7 @@ export default function SurveyApp() {
           )}
           <div style={{ marginTop: 20 }}>
             <label style={{ fontWeight: 600, color: "#4a5568", fontSize: 14 }}>
-              Please briefly explain why you made this ranking decision. What specific visual features influenced your decision? <span style={{ color: "#e53e3e" }}>*</span>
+              Please briefly explain why you made this ranking decision. What specific visual features influenced your decision?
             </label>
             <textarea value={trustExplanations[ri]}
               onChange={(e) => { const c = [...trustExplanations]; c[ri] = e.target.value; setTrustExplanations(c); }}
@@ -791,9 +786,6 @@ export default function SurveyApp() {
               style={{ ...inputStyle, marginTop: 8, resize: "vertical", fontFamily: "inherit" }}
               onFocus={(e) => e.target.style.borderColor = "#38a169"}
               onBlur={(e) => e.target.style.borderColor = "#cbd5e0"} />
-            {!trustExplanations[ri].trim() && (
-              <p style={{ fontSize: 12, color: "#e53e3e", margin: "4px 0 0" }}>This field is required.</p>
-            )}
           </div>
         </div>
 
@@ -808,7 +800,7 @@ export default function SurveyApp() {
   /* ─── About You ─── */
   const aboutStep = rankingEnd + 1;
   if (step === aboutStep) {
-    const canProceed = age && gender && education && designExp && colorVision && nativeLang && (nativeLang !== "Other" || otherLang.trim());
+    const canProceed = true;
     return (
       <Page>
         <div style={{ maxWidth: 700, margin: "0 auto" }}>
@@ -817,7 +809,7 @@ export default function SurveyApp() {
 
           <div style={{ marginBottom: 28 }}>
             <label style={{ fontWeight: 600, color: "#2d3748", fontSize: 15 }}>
-              What is your age range? <span style={{ color: "#e53e3e" }}>*</span>
+              What is your age range?
             </label>
             <select value={age} onChange={(e) => setAge(e.target.value)} style={{ ...inputStyle, background: "#fff" }}>
               <option value="">Select...</option>
@@ -828,7 +820,7 @@ export default function SurveyApp() {
 
           <div style={{ marginBottom: 28 }}>
             <label style={{ fontWeight: 600, color: "#2d3748", fontSize: 15 }}>
-              Please select your gender. <span style={{ color: "#e53e3e" }}>*</span>
+              Please select your gender.
             </label>
             <div style={{ marginTop: 8 }}>
               <RadioGroup name="gender" options={["Male", "Female", "Non-binary", "Prefer not to say"]}
@@ -838,7 +830,7 @@ export default function SurveyApp() {
 
           <div style={{ marginBottom: 28 }}>
             <label style={{ fontWeight: 600, color: "#2d3748", fontSize: 15 }}>
-              Please select your highest level of completed education. <span style={{ color: "#e53e3e" }}>*</span>
+              Please select your highest level of completed education.
             </label>
             <div style={{ marginTop: 8 }}>
               <RadioGroup name="education"
@@ -849,7 +841,7 @@ export default function SurveyApp() {
 
           <div style={{ marginBottom: 28 }}>
             <label style={{ fontWeight: 600, color: "#2d3748", fontSize: 15 }}>
-              Please rate your familiarity with design and visual presentation of data. <span style={{ color: "#e53e3e" }}>*</span>
+              Please rate your familiarity with design and visual presentation of data.
             </label>
             <div style={{ marginTop: 8 }}>
               <RadioGroup name="designExp" options={[
@@ -862,7 +854,7 @@ export default function SurveyApp() {
 
           <div style={{ marginBottom: 28 }}>
             <label style={{ fontWeight: 600, color: "#2d3748", fontSize: 15 }}>
-              Do you have any difficulty distinguishing colors (e.g., red vs. green)? <span style={{ color: "#e53e3e" }}>*</span>
+              Do you have any difficulty distinguishing colors (e.g., red vs. green)?
             </label>
             <div style={{ marginTop: 8 }}>
               <RadioGroup name="colorVision" options={[
@@ -875,7 +867,7 @@ export default function SurveyApp() {
           </div>
 
           <div style={{ marginBottom: 28 }}>
-            <label style={{ fontWeight: 600, color: "#2d3748", fontSize: 15 }}>What is your native language? <span style={{ color: "#e53e3e" }}>*</span></label>
+            <label style={{ fontWeight: 600, color: "#2d3748", fontSize: 15 }}>What is your native language?</label>
             <select value={nativeLang} onChange={(e) => setNativeLang(e.target.value)} style={{ ...inputStyle, background: "#fff" }}>
               <option value="">Select...</option>
               <option value="English">English</option>
