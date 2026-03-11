@@ -17,37 +17,37 @@ const baseRoundData = [
   {
     id: 1,
     label: "Bar Charts",
-    charts: Array.from({ length: 7 }, (_, j) => ({
-      id: `bar_${j + 1}`,
+    charts: [4, 2, 6, 1, 5, 3, 7].map((level, j) => ({
+      id: `bar_${level}`,
       label: `Chart ${String.fromCharCode(65 + j)}`,
-      image: `${import.meta.env.BASE_URL}images/honest-bar-${j + 1}.png`,
+      image: `${import.meta.env.BASE_URL}images/honest-bar-${level}.png`,
     })),
   },
   {
     id: 2,
     label: "Line Charts",
-    charts: Array.from({ length: 7 }, (_, j) => ({
-      id: `line_${j + 1}`,
+    charts: [6, 7, 2, 3, 1, 4, 5].map((level, j) => ({
+      id: `line_${level}`,
       label: `Chart ${String.fromCharCode(65 + j)}`,
-      image: `${import.meta.env.BASE_URL}images/honest-line-${j + 1}.png`,
+      image: `${import.meta.env.BASE_URL}images/honest-line-${level}.png`,
     })),
   },
   {
     id: 3,
     label: "Pie Charts",
-    charts: Array.from({ length: 7 }, (_, j) => ({
-      id: `pie_${j + 1}`,
+    charts: [3, 5, 2, 7, 4, 6, 1].map((level, j) => ({
+      id: `pie_${level}`,
       label: `Chart ${String.fromCharCode(65 + j)}`,
-      image: `${import.meta.env.BASE_URL}images/honest-pie-${j + 1}.png`,
+      image: `${import.meta.env.BASE_URL}images/honest-pie-${level}.png`,
     })),
   },
   {
     id: 4,
     label: "Bubble Charts",
-    charts: Array.from({ length: 7 }, (_, j) => ({
-      id: `bubble_${j + 1}`,
+    charts: [7, 5, 6, 3, 1, 2, 4].map((level, j) => ({
+      id: `bubble_${level}`,
       label: `Chart ${String.fromCharCode(65 + j)}`,
-      image: `${import.meta.env.BASE_URL}images/honest-bubble-${j + 1}.png`,
+      image: `${import.meta.env.BASE_URL}images/honest-bubble-${level}.png`,
     })),
   },
 ];
