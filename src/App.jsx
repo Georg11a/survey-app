@@ -393,7 +393,7 @@ function SplitRankingPanel({ charts, rankedItems, setRankedItems, accentColor = 
 
 
 /* ─── Instruction block ─── */
-function TaskInstructions({ keyword, color }) {
+function TaskInstructions({ keyword, color, hint }) {
   return (
     <div style={{
       background: "#f8f9fb", borderRadius: 10, padding: "16px 20px",
@@ -408,6 +408,11 @@ function TaskInstructions({ keyword, color }) {
         1 (top) = most {keyword}</span> and <span style={{ fontWeight: 800, color: "#2d3748", textDecoration: "underline" }}>
         7 (bottom) = least {keyword}</span>. Drag charts from the left panel into the ranking slots on the right. Click ⤢ to enlarge.
       </p>
+      {hint && (
+        <p style={{ color: "#2d3748", fontSize: 13.5, lineHeight: 1.6, margin: "10px 0 0", fontWeight: 600 }}>
+          {hint}
+        </p>
+      )}
       <p style={{ color: "#718096", fontSize: 13, lineHeight: 1.6, margin: "10px 0 0" }}>
         Important: Compare each visualization carefully, and focus only on the design style (layout, typography, color, spacing, alignment, clarity, etc.). Do not consider the data content or whether you agree with anything shown in the chart.
       </p>
@@ -728,7 +733,7 @@ export default function SurveyApp() {
           <h2 style={{ fontSize: 19, fontWeight: 700, color: "#2d3748", margin: "0 0 12px" }}>
             Task A: Rank by Professionalism
           </h2>
-          <TaskInstructions keyword="professional" color="#2a8fc1" />
+          <TaskInstructions keyword="professional" color="#2a8fc1" hint="Professional refers to the kind of visual style you might expect to see in published work, such as journalism, reports, or research papers." />
           <SplitRankingPanel
             charts={allRoundData[ri].charts}
             rankedItems={profRankings[ri]}
@@ -762,7 +767,7 @@ export default function SurveyApp() {
           <h2 style={{ fontSize: 19, fontWeight: 700, color: "#2d3748", margin: "0 0 12px" }}>
             Task B: Rank by Trust
           </h2>
-          <TaskInstructions keyword="trustworthy" color="#38a169" />
+          <TaskInstructions keyword="trustworthy" color="#38a169" hint="A chart that looks professional may also look trustworthy, but the two do not have to be the same. Please rank the charts based on your own judgment and preferences, and briefly explain what influenced your decision." />
           <SplitRankingPanel
             charts={allRoundData[ri].charts}
             rankedItems={trustRankings[ri]}
