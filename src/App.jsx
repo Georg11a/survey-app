@@ -409,8 +409,8 @@ function TaskInstructions({ keyword, color, hint }) {
         7 (bottom) = least {keyword}</span>. Drag charts from the left panel into the ranking slots on the right. Click ⤢ to enlarge.
       </p>
       {hint && (
-        <p style={{ color: "#2d3748", fontSize: 13.5, lineHeight: 1.6, margin: "10px 0 0", fontWeight: 600 }}>
-          {hint}
+        <p style={{ color: "#2d3748", fontSize: 13.5, lineHeight: 1.6, margin: "10px 0 0", fontWeight: 600, textDecoration: "underline" }}>
+          💡 {hint}
         </p>
       )}
       <p style={{ color: "#718096", fontSize: 13, lineHeight: 1.6, margin: "10px 0 0" }}>
@@ -735,6 +735,7 @@ export default function SurveyApp() {
           </h2>
           <TaskInstructions keyword="professional" color="#2a8fc1" hint="Professional refers to the kind of visual style you might expect to see in published work, such as journalism, reports, or research papers." />
           <SplitRankingPanel
+            key={`prof-${ri}`}
             charts={allRoundData[ri].charts}
             rankedItems={profRankings[ri]}
             setRankedItems={(items) => {
@@ -769,6 +770,7 @@ export default function SurveyApp() {
           </h2>
           <TaskInstructions keyword="trustworthy" color="#38a169" hint="A chart that looks professional may also look trustworthy, but the two do not have to be the same. Please rank the charts based on your own judgment and preferences, and briefly explain what influenced your decision." />
           <SplitRankingPanel
+            key={`trust-${ri}`}
             charts={allRoundData[ri].charts}
             rankedItems={trustRankings[ri]}
             setRankedItems={(items) => {
