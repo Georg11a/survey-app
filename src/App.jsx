@@ -934,10 +934,20 @@ export default function SurveyApp() {
           Thank you for your participation!
         </h1>
         <p style={{ color: "#718096", fontSize: 16, lineHeight: 1.6 }}>
-          Your responses have been recorded successfully. You may now close this window or return to Prolific.
+          Your responses have been recorded successfully. Please click the button below to return to Prolific and complete your submission.
+        </p>
+        <a href="https://app.prolific.com/submissions/complete?cc=CPLKA9P2" style={{ textDecoration: "none" }}>
+          <button style={{
+            marginTop: 28, padding: "14px 36px", borderRadius: 8, border: "none",
+            background: "#2a8fc1", color: "#fff", fontSize: 17, fontWeight: 700,
+            cursor: "pointer", boxShadow: "0 2px 8px rgba(42,143,193,.3)",
+          }}>Return to Prolific</button>
+        </a>
+        <p style={{ color: "#a0aec0", fontSize: 13, lineHeight: 1.6, marginTop: 20 }}>
+          If the button does not work, please copy and paste this completion code into Prolific: <strong style={{ color: "#2d3748" }}>CPLKA9P2</strong>
         </p>
         <div style={{
-          marginTop: 32, padding: "14px 24px", background: "#f7f8fa",
+          marginTop: 24, padding: "14px 24px", background: "#f7f8fa",
           borderRadius: 8, display: "inline-block", color: "#4a5568", fontSize: 14,
         }}>
           Prolific ID: <strong>{prolificId}</strong>
